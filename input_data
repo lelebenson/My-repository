@@ -1,0 +1,73 @@
+pro input_data,radiance_data3,incident_data3,emission_data3,phase_data3
+  tic
+  radiance_file = 'D:\NAOC2017\CE-1IIM\IIM process test\radiance.txt'
+  samples = 128
+  lines = file_lines(radiance_file)
+  ;显示图像检验是否数据准确
+  openr,lun,radiance_file,/get_lun
+    radiance_data = fltarr(samples,lines)
+    readf,lun,radiance_data
+  free_lun,lun
+  toc
+;  tvscl,radiance_Data[*,0:1700],/order
+  emission_file = 'D:\NAOC2017\CE-1IIM\IIM process test\angle_data\emission.txt'
+  openr,lun,emission_file,/get_lun
+  lines2 = file_lines(emission_file)
+  if lines eq lines2 then begin
+    print,'Result is right'
+    emission_data = fltarr(samples,lines)
+    readf,lun,emission_data
+    free_lun,lun
+  endif else begin
+    print,'Result is wrong,lines of data are not the same'
+    return  ;return处停止程序执行
+  endelse
+  incident_file = 'D:\NAOC2017\CE-1IIM\IIM process test\angle_data\incident.txt'
+  phase_file = 'D:\NAOC2017\CE-1IIM\IIM process test\angle_data\phase.txt'
+  openr,1,incident_file
+  incident_data = fltarr(samples,lines)
+  readf,1,incident_data
+  free_lun,1
+  toc
+  openr,2,phase_file
+  phase_data = fltarr(samples,lines)
+  readf,2,phase_data
+  free_lun,2
+  toc
+  ;make the array data to one sample using the funtion of reform
+  radiance_data1 = reform(radiance_data,1,lines*samples)
+  incident_data1 = reform(incident_data,1,lines*samples)
+  emission_data1 = reform(emission_data,1,lines*samples)
+  phase_data1 = reform(phase_data,1,lines*samples)
+  toc
+  ;根据散点图可以看出，相角小于0.1°为无效值，用phase_index去除相角小于0.1°值
+;  r=scatterplot(phase_Data1,radiance_data1,xtitle='相角（°）',ytitle='辐亮度')
+  phase_index = where(phase_data1 gt 0.1 )
+  radiance_data2 = radiance_data1(phase_index)
+  incident_data2 = incident_data1(phase_index)
+  emission_data2 = emission_data1(phase_index)
+  phase_data2 = phase_data1(phase_index)
+  ;进一步用radiance的值大于0.8的值进一步过滤无效值
+;  r=scatterplot(phase_data2,radiance_data2,yrange=[0,0.4],xtitle='相角（°）',ytitle='辐亮度')
+  toc
+  radiance_index = where(radiance_data2 lt 0.08 and radiance_data2 gt 0.015)
+  radiance_data3 = radiance_data2(radiance_index)
+  incident_data3 = incident_data2(radiance_index)
+  emission_data3 = emission_data2(radiance_index)
+  phase_data3 = phase_data2(radiance_index)
+;  r=scatterplot(phase_data3,radiance_data3,yrange=[0,0.4],xtitle='相角（°）',ytitle='辐亮度')
+  toc
+
+  
+  
+  
+  
+  
+  
+
+
+
+
+
+
+end
